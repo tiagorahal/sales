@@ -28,14 +28,25 @@ const Home = () => {
   };
 
   const handleConfirm = async () => {
-    const json = JSON.stringify({ content: text });
     try {
-      const res = await fetch("http://localhost:3000/api/upload", {
+      const sales: any[] = [];
+      text.forEach(line => {
+        const obj = JSON.parse(line);
+        const sale = {
+          type: obj.type,
+          date: obj.date,
+          product: obj.product,
+          value: obj.value,
+          salesperson: obj.salesperson,
+        };
+        sales.push(sale);
+      });
+      const res = await fetch("https://644ad55ba8370fb32158e570.mockapi.io/sales/sales_info", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: json,
+        body: JSON.stringify({ sales }),
       });
       console.log(await res.json());
       setText([]);

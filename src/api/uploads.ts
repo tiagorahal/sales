@@ -11,7 +11,7 @@ const uploadHandler: (req: NextApiRequest, res: NextApiResponse) => Promise<void
   const { content } = req.body;
   try {
     // Include API endpoint in fetch call
-    const response = await fetch('http://localhost:3005/sales', {
+    const response = await fetch('https://644ad55ba8370fb32158e570.mockapi.io/sales/sales_info', {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
