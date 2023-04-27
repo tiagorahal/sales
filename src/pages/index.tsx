@@ -30,7 +30,7 @@ const Home = () => {
   const handleConfirm = async () => {
     const json = JSON.stringify({ content: text });
     try {
-      const res = await fetch("https://example.com/api/upload", {
+      const res = await fetch("http://localhost:3000/api/upload", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
