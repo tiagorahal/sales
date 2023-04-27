@@ -1,73 +1,107 @@
-import type { NextPage } from "next";
-import React from "react";
+import { useState, useRef } from "react";
 
-const Home: NextPage = () => {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const inputFileRef = React.useRef<HTMLInputElement | null>(null);
+const Home = () => {
+  const [text, setText] = useState<string[]>([]);
+  const [submitted, setSubmitted] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleOnClick = async (e: React.MouseEvent<HTMLInputElement>) => {
-    /* Prevent form from submitting by default */
-    e.preventDefault();
-
-    /* If file is not selected, then show alert message */
-    if (!inputFileRef.current?.files?.length) {
-      alert("Please, select file you want to upload");
-      return;
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        if (typeof reader.result === "string") {
+          const lines = reader.result.split("\n").map((line) => {
+            const type = line.substring(0, 1);
+            const date = line.substring(1, 26);
+            const product = line.substring(26, 56);
+            const value = line.substring(56, 66);
+            const salesperson = line.substring(66, 86);
+            console.log(type, date, product, value, salesperson);
+            return { type, date, product, value, salesperson };
+          });
+          if (lines.length > 0 && lines[lines.length - 1].salesperson === "") {
+            lines.pop();
+          }
+          setText(lines.map((line) => JSON.stringify(line)));
+          setSubmitted(false);
+        }
+      };
+      reader.readAsText(file);
     }
+  };
 
-    setIsLoading(true);
+  const handleConfirm = async () => {
+    try {
+      const sales: any[] = [];
+      text.forEach(line => {
+        const obj = JSON.parse(line);
+        const sale = {
+          type: obj.type,
+          date: obj.date,
+          product: obj.product,
+          value: obj.value,
+          salesperson: obj.salesperson,
+        };
+        sales.push(sale);
+      });
 
-    /* Add files to FormData */
-    const formData = new FormData();
-    Object.values(inputFileRef.current.files).forEach((file) => {
-      formData.append("file", file);
-    });
+      const res = await fetch("https://644ad55ba8370fb32158e570.mockapi.io/sales/sales_info", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ sales }),
+      });
+      console.log(await res.json());
+      setText([]);
+      setSubmitted(true);
 
-    /* Send request to our api route */
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    const body = (await response.json()) as {
-      status: "ok" | "fail";
-      message: string;
-    };
-
-    alert(body.message);
-
-    if (body.status === "ok") {
-      inputFileRef.current.value = "";
-      // Do some stuff on successfully upload
-    } else {
-      // Do some stuff on error
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (error) {
+      console.error(error);
     }
-
-    setIsLoading(false);
   };
 
   return (
-    <form className="flex flex-col gap-2">
-      <div className="flex flex-col gap-2">
+    <div className="p-4">
+      <label
+        className="block mb-2 mx-4 text-sm font-medium text-gray-900"
+        htmlFor="file_input"
+      >
+        Upload file
+      </label>
+      {submitted ? (
+        <p className="mb-2 mx-4 text-sm font-medium text-green-500">File uploaded successfully!</p>
+      ) : (
         <input
+          className="block max-w-[300px] mx-4 text-sm text-gray-900 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 "
           type="file"
-          name="myfile"
-          ref={inputFileRef}
-          className="p-2 bg-gray-200 rounded-md"
-          multiple
+          id="file_input"
+          onChange={handleUpload}
+          ref={fileInputRef}
         />
-      </div>
-      <div className="flex gap-2 justify-center items-center">
-        <input
-          type="submit"
-          value="Upload"
-          disabled={isLoading}
-          onClick={handleOnClick}
-          className="px-4 py-2 bg-indigo-500 text-white font-semibold rounded-md disabled:opacity-50"
-        />
-        {isLoading && ` Wait, please...`}
-      </div>
-    </form>
+      )}
+      <button
+        className="bg-blue-500 mx-4 mt-3 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+        onClick={handleConfirm}
+      >
+        Confirm upload
+      </button>
+      <p className="mx-4 mt-5 mb-1 text-2xl font-bold text-white">This is your uploaded data:</p>
+      <ul className="mx-4 mb-8 p-4 bg-gray-100 rounded-lg shadow-md border-2">
+        {text &&
+          text.filter(Boolean).map((line, index) => {
+            return (
+              <li className="my-2" key={index}>
+                {line}
+              </li>
+            );
+          })}
+      </ul>
+    </div>
   );
 };
 
