@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 const Home = () => {
   const [text, setText] = useState<string[]>([]);
+  const [submitted, setSubmitted] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -21,6 +24,7 @@ const Home = () => {
             lines.pop();
           }
           setText(lines.map((line) => JSON.stringify(line)));
+          setSubmitted(false);
         }
       };
       reader.readAsText(file);
@@ -41,6 +45,7 @@ const Home = () => {
         };
         sales.push(sale);
       });
+
       const res = await fetch("https://644ad55ba8370fb32158e570.mockapi.io/sales/sales_info", {
         method: "POST",
         headers: {
@@ -50,6 +55,11 @@ const Home = () => {
       });
       console.log(await res.json());
       setText([]);
+      setSubmitted(true);
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     } catch (error) {
       console.error(error);
     }
@@ -63,13 +73,18 @@ const Home = () => {
       >
         Upload file
       </label>
-      <input
-        className="block max-w-[300px] mx-4 text-sm text-gray-900 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 "
-        type="file"
-        id="file_input"
-        onChange={handleUpload}
-      />
-       <button
+      {submitted ? (
+        <p className="mb-2 mx-4 text-sm font-medium text-green-500">File uploaded successfully!</p>
+      ) : (
+        <input
+          className="block max-w-[300px] mx-4 text-sm text-gray-900 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 "
+          type="file"
+          id="file_input"
+          onChange={handleUpload}
+          ref={fileInputRef}
+        />
+      )}
+      <button
         className="bg-blue-500 mx-4 mt-3 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
         onClick={handleConfirm}
       >
