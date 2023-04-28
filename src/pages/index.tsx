@@ -33,30 +33,19 @@ const Home = () => {
 
   const handleConfirm = async () => {
     try {
-      const sales: any[] = [];
-      text.forEach(line => {
-        const obj = JSON.parse(line);
-        const sale = {
-          type: obj.type,
-          date: obj.date,
-          product: obj.product,
-          value: obj.value,
-          salesperson: obj.salesperson,
-        };
-        sales.push(sale);
-      });
-
-      const res = await fetch("https://644ad55ba8370fb32158e570.mockapi.io/sales/sales_info", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ sales }),
-      });
-      console.log(await res.json());
+      for (const line of text) {
+        const {type, date, product, value, salesperson} = JSON.parse(line);
+        const res = await fetch("https://644ad55ba8370fb32158e570.mockapi.io/sales/sales_info", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ type, date, product, value, salesperson }),
+        });
+        console.log(await res.json());
+      }
       setText([]);
       setSubmitted(true);
-
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
@@ -74,7 +63,9 @@ const Home = () => {
         Upload file
       </label>
       {submitted ? (
-        <p className="mb-2 mx-4 text-sm font-medium text-green-500">File uploaded successfully!</p>
+        <p className="mb-2 mx-4 text-sm font-medium text-green-500">
+          File uploaded successfully!
+        </p>
       ) : (
         <input
           className="block max-w-[300px] mx-4 text-sm text-gray-900 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 "
@@ -90,8 +81,7 @@ const Home = () => {
       >
         Confirm upload
       </button>
-      <p className="mx-4 mt-5 mb-1 text-2xl font-bold text-white">This is your uploaded data:</p>
-      <ul className="mx-4 mb-8 p-4 bg-gray-100 rounded-lg shadow-md border-2">
+      <ul className="mx-4 mt-5 mb-8 p-4 bg-gray-100 rounded-lg shadow-md border-2">
         {text &&
           text.filter(Boolean).map((line, index) => {
             return (
