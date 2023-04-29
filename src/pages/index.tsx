@@ -16,7 +16,7 @@ const Home = () => {
             const type = line.substring(0, 1);
             const date = line.substring(1, 26);
             const product = line.substring(26, 56);
-            const value = line.substring(56, 66).trim().replace(/^0+/, '');
+            const value = line.substring(56, 66).trim().replace(/^0+/, "");
             const salesperson = line.substring(66, 86);
             console.log(type, date, product, value, salesperson);
             return { type, date, product, value, salesperson };
@@ -26,6 +26,16 @@ const Home = () => {
           }
           setText(lines.map((line) => JSON.stringify(line)));
           setSubmitted(false);
+
+          const sales = lines.map((line) => ({
+            type: line.type,
+            date: line.date,
+            product: line.product,
+            value: line.value,
+            salesperson: line.salesperson,
+          }));
+
+          console.log(JSON.stringify(sales));
         }
       };
       reader.readAsText(file);
@@ -35,20 +45,18 @@ const Home = () => {
   const handleConfirm = async () => {
     try {
       setLoading(true);
-      for (const line of text) {
-        const { type, date, product, value, salesperson } = JSON.parse(line);
-        const res = await fetch(
-          "https://644ad55ba8370fb32158e570.mockapi.io/sales/sales_info",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ type, date, product, value, salesperson }),
-          }
-        );
-        console.log(await res.json());
-      }
+      const sales = text.map((line) => JSON.parse(line));
+      const res = await fetch(
+        "https://644ad55ba8370fb32158e570.mockapi.io/sales/sales_info",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ sales }),
+        }
+      );
+      console.log(await res.json());
       setText([]);
       setSubmitted(true);
       setLoading(false);
@@ -118,11 +126,7 @@ const Home = () => {
             </tbody>
           </table>
         </div>
-      ) : (
-        <p className="mx-auto sm:mx-4 my-5 text-center sm:text-left">
-          No data to display.
-        </p>
-      )}
+      ) : null}
     </div>
   );
 };
