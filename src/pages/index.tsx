@@ -53,7 +53,7 @@ const Home = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ sales }),
+          body: JSON.stringify(sales),
         }
       );
       console.log(await res.json());
