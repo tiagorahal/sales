@@ -15,7 +15,7 @@ const Home = () => {
           const lines = reader.result.split("\n").map((line) => {
             const type = line.substring(0, 1);
             const date = line.substring(1, 26);
-            const product = line.substring(26, 56);
+            const product = line.substring(26, 56).trim();
             const value = line.substring(56, 66).trim().replace(/^0+/, "");
             const salesperson = line.substring(66, 86);
             console.log(type, date, product, value, salesperson);
