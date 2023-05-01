@@ -8,7 +8,7 @@ type SalesRecord = {
   salesperson: string;
 };
 
-const Home = () => {
+export default function Upload() {
   const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
   const [text, setText] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
@@ -61,21 +61,27 @@ const Home = () => {
   const handleConfirm = async () => {
     try {
       setLoading(true);
-      const salesRecordsJSON = JSON.stringify(salesRecords); 
-      const res = await fetch("http://localhost:3005/sales/create-sales", {
+      const salesRecordsJSON = JSON.stringify(salesRecords);
+      await fetch("http://localhost:3005/sales/create-sales", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: salesRecordsJSON, 
+        body: salesRecordsJSON,
       });
-      const data = await res.json();
-      console.log(data.message);
+      setSubmitted(true);
+      setSalesRecords([]);
     } catch (error) {
       console.error(error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleReset = () => {
+    fileInputRef.current && (fileInputRef.current.value = "");
+    setSubmitted(false);
+    setSalesRecords([]);
   };
 
   return (
@@ -87,9 +93,9 @@ const Home = () => {
         Upload file
       </label>
       {submitted ? (
-        <p className="mb-2 mx-auto sm:mx-4 text-sm font-medium">
-          File submitted for processing.
-        </p>
+        <div className="mb-2 mx-auto sm:mx-4 text-sm font-medium text-green-500">
+          File submitted.
+        </div>
       ) : (
         <div>
           <input
@@ -100,42 +106,75 @@ const Home = () => {
             onChange={handleUpload}
           />
           <button
-            className="hidden sm:block py-1 px-4 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:ring-offset-2"
-            onClick={() => fileInputRef?.current?.click()}
+            className="hidden sm:block py-1 px-4 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
+            onClick={() => {
+              if (fileInputRef.current) {
+                fileInputRef.current.click();
+              }
+            }}
           >
-            Upload file
+            Choose file
           </button>
-          <div className="mt-4 max-h-72 overflow-y-auto">
-            {text.map((line, index) => (
-              <pre key={index} className="text-left text-sm">
-                {line}
-                <br />
-              </pre>
-            ))}
-          </div>
           {salesRecords.length > 0 && (
-            <>
-              <hr className="my-4" />
-              <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between">
-                <p className="text-sm font-medium text-gray-900 mb-2 sm:mb-0">
-                  Confirm processing of {salesRecords.length} records?
-                </p>
-                <button
-                  className={`py-1 px-4 rounded-md text-sm font-medium text-gray-700 sm:ml-4 focus:outline-none focus:ring-2 focus:ring-gray-200 ${
-                    loading ? "animate-pulse" : ""
-                  }`}
-                  onClick={handleConfirm}
-                  disabled={loading}
-                >
-                  {loading ? "Processing..." : "Confirm"}
-                </button>
-              </div>
-            </>
+            <table className="w-full mt-4 border-collapse border border-gray-500">
+              <thead>
+                <tr className="bg-gray-800 text-white">
+                  <th className="p-2">Type</th>
+                  <th className="p-2">Date</th>
+                  <th className="p-2">Product</th>
+                  <th className="p-2">Value</th>
+                  <th className="p-2">Salesperson</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesRecords.map((record, index) => (
+                  <tr
+                    key={index}
+                    className={index % 2 === 0 ? "bg-gray-100" : "bg-white"}
+                  >
+                    <td className="p-2 border border-gray-500">
+                      {record.type}
+                    </td>
+                    <td className="p-2 border border-gray-500">
+                      {record.date}
+                    </td>
+                    <td className="p-2 border border-gray-500">
+                      {record.product}
+                    </td>
+                    <td className="p-2 border border-gray-500">
+                      {record.value}
+                    </td>
+                    <td className="p-2 border border-gray-500">
+                      {record.salesperson}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       )}
+      {loading ? (
+        <div className="mt-4 animate-pulse">Submitting file...</div>
+      ) : (
+        !submitted &&
+        salesRecords.length > 0 && (
+          <div className="mt-4 text-center">
+            <button
+              className="inline-block bg-gray-700 hover:bg-gray-800 py-2 px-4 text-white text-sm font-medium rounded-md"
+              onClick={handleConfirm}
+            >
+              Submit
+            </button>{" "}
+            <button
+              className="inline-block bg-gray-700 hover:bg-gray-800 py-2 px-4 text-white text-sm font-medium rounded-md"
+              onClick={handleReset}
+            >
+              Go back
+            </button>
+          </div>
+        )
+      )}
     </div>
   );
-};
-
-export default Home;
+}
