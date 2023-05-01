@@ -1,6 +1,15 @@
 import { useState, useRef } from "react";
 
+type SalesRecord = {
+  type: string;
+  date: string;
+  product: string;
+  value: number;
+  salesperson: string;
+};
+
 const Home = () => {
+  const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
   const [text, setText] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -12,30 +21,37 @@ const Home = () => {
       const reader = new FileReader();
       reader.onload = async () => {
         if (typeof reader.result === "string") {
-          const lines = reader.result.split("\n").map((line) => {
-            const type = line.substring(0, 1);
-            const date = line.substring(1, 26);
-            const product = line.substring(26, 56);
-            const value = line.substring(56, 66).trim().replace(/^0+/, "");
-            const salesperson = line.substring(66, 86);
-            console.log(type, date, product, value, salesperson);
-            return { type, date, product, value, salesperson };
-          });
-          if (lines.length > 0 && lines[lines.length - 1].salesperson === "") {
+          const lines = reader.result.split("\n");
+          if (lines[lines.length - 1] === "") {
             lines.pop();
           }
+
+          const salesRecords: SalesRecord[] = [];
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const type = line.substring(0, 1);
+            const date = new Date(line.substring(1, 26)).toISOString();
+            const product = line.substring(26, 56).trim();
+            const value = parseInt(
+              line.substring(56, 66).trim().replace(/^0+/, "")
+            );
+            const salesperson = line.substring(66, 86);
+
+            const salesRecord: SalesRecord = {
+              type,
+              date,
+              product,
+              value,
+              salesperson,
+            };
+            salesRecords.push(salesRecord);
+          }
+
           setText(lines.map((line) => JSON.stringify(line)));
           setSubmitted(false);
+          setSalesRecords(salesRecords);
 
-          const sales = lines.map((line) => ({
-            type: line.type,
-            date: line.date,
-            product: line.product,
-            value: line.value,
-            salesperson: line.salesperson,
-          }));
-
-          console.log(JSON.stringify(sales));
+          console.log(JSON.stringify(salesRecords));
         }
       };
       reader.readAsText(file);
@@ -45,32 +61,25 @@ const Home = () => {
   const handleConfirm = async () => {
     try {
       setLoading(true);
-      const sales = text.map((line) => JSON.parse(line));
-      const res = await fetch(
-        "https://644ad55ba8370fb32158e570.mockapi.io/sales/sales_info",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ sales }),
-        }
-      );
-      console.log(await res.json());
-      setText([]);
-      setSubmitted(true);
-      setLoading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      const salesRecordsJSON = JSON.stringify(salesRecords); 
+      const res = await fetch("http://localhost:3005/sales/create-sales", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: salesRecordsJSON, 
+      });
+      const data = await res.json();
+      console.log(data.message);
     } catch (error) {
       console.error(error);
+    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 w-full bg-gray-500 h-full rounded-lg">
       <label
         className="block mb-2 mx-auto sm:mx-4 text-sm font-medium text-gray-900 text-center sm:text-left"
         htmlFor="file_input"
@@ -78,55 +87,53 @@ const Home = () => {
         Upload file
       </label>
       {submitted ? (
-        <p className="mb-2 mx-auto sm:mx-4 text-sm font-medium text-green-500 text-center sm:text-left">
-          File uploaded successfully!
+        <p className="mb-2 mx-auto sm:mx-4 text-sm font-medium">
+          File submitted for processing.
         </p>
       ) : (
-        <input
-          className="block w-full sm:max-w-md mx-auto sm:mx-4 text-sm text-gray-900 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700"
-          type="file"
-          id="file_input"
-          onChange={handleUpload}
-          ref={fileInputRef}
-        />
-      )}
-      <button
-        className="bg-blue-500 mx-auto sm:mx-4 mt-3 mb-5 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400"
-        disabled={loading}
-        onClick={handleConfirm}
-      >
-        {loading ? "Uploading data..." : "Confirm upload"}
-      </button>
-      {text && text.length > 0 ? (
-        <div className="overflow-x-auto mx-auto sm:mx-4">
-          <table className="table-auto w-full bg-white p-3 rounded-md shadow-lg">
-            <thead>
-              <tr>
-                <th className="p-2">Type</th>
-                <th>Date</th>
-                <th>Product</th>
-                <th>Value</th>
-                <th>Salesperson</th>
-              </tr>
-            </thead>
-            <tbody>
-              {text.map((line, index) => {
-                const { type, date, product, value, salesperson } =
-                  JSON.parse(line);
-                return (
-                  <tr key={index}>
-                    <td className="border px-4 py-2">{type}</td>
-                    <td className="border px-4 py-2">{date}</td>
-                    <td className="border px-4 py-2">{product}</td>
-                    <td className="border px-4 py-2">{value}</td>
-                    <td className="border px-4 py-2">{salesperson}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div>
+          <input
+            className="sm:hidden"
+            ref={fileInputRef}
+            type="file"
+            accept=".txt"
+            onChange={handleUpload}
+          />
+          <button
+            className="hidden sm:block py-1 px-4 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-200 focus:ring-offset-2"
+            onClick={() => fileInputRef?.current?.click()}
+          >
+            Upload file
+          </button>
+          <div className="mt-4 max-h-72 overflow-y-auto">
+            {text.map((line, index) => (
+              <pre key={index} className="text-left text-sm">
+                {line}
+                <br />
+              </pre>
+            ))}
+          </div>
+          {salesRecords.length > 0 && (
+            <>
+              <hr className="my-4" />
+              <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-between">
+                <p className="text-sm font-medium text-gray-900 mb-2 sm:mb-0">
+                  Confirm processing of {salesRecords.length} records?
+                </p>
+                <button
+                  className={`py-1 px-4 rounded-md text-sm font-medium text-gray-700 sm:ml-4 focus:outline-none focus:ring-2 focus:ring-gray-200 ${
+                    loading ? "animate-pulse" : ""
+                  }`}
+                  onClick={handleConfirm}
+                  disabled={loading}
+                >
+                  {loading ? "Processing..." : "Confirm"}
+                </button>
+              </div>
+            </>
+          )}
         </div>
-      ) : null}
+      )}
     </div>
   );
 };

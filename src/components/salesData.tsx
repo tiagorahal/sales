@@ -51,7 +51,7 @@ function SalesData() {
         setLoading(true);
 
         const response = await fetch(
-          "https://644ad55ba8370fb32158e570.mockapi.io/sales/sales_info"
+          "http://localhost:3005/sales/get-sales"
         );
 
         const data = await response.json();
