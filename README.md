@@ -1,38 +1,40 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Sales
+
+> Front end app tha upload data to a back end server.
+## Built With
+
+- NextJs
+- React
+- Tailwind
+- Typescript
 
 ## Getting Started
+To get a local copy up and running follow these simple example steps.
+- `git clone https://github.com/tiagorahal/sales.git`
+- `cd sales/`
+- `npm install`
+- `npm run dev`
+- make sure that the server is running, if not access this [repo](https://github.com/tiagorahal/sales-api) and follow the instructions.
 
-First, run the development server:
+## Author
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-```
+👨‍💻 **Tiago Rahal Aires**
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- GitHub: [@tiagorahal](https://github.com/tiagorahal)
+- Twitter: [@RahalAires](https://twitter.com/RahalAires)
+- LinkedIn: [Tiago Rahal Aires](https://linkedin.com/tiagorahal)
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## 🤝 Contributing
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+Contributions, issues, and feature requests are welcome!
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+Feel free to check the [issues page](https://github.com/tiagorahal/sales/issues).
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
-## Learn More
+## Show your support
 
-To learn more about Next.js, take a look at the following resources:
+Give a ⭐️ if you like this project!
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📝 License
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+This project is [MIT](./LICENSE) licensed.
