@@ -1,6 +1,18 @@
 import { useState, useRef } from "react";
+import { useRouter } from "next/router";
 
-const Home = () => {
+
+type SalesRecord = {
+  type: string;
+  date: string;
+  product: string;
+  value: string;
+  salesperson: string;
+};
+
+const Upload = (): JSX.Element => {
+  const router = useRouter();
+  const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
   const [text, setText] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -12,30 +24,35 @@ const Home = () => {
       const reader = new FileReader();
       reader.onload = async () => {
         if (typeof reader.result === "string") {
-          const lines = reader.result.split("\n").map((line) => {
-            const type = line.substring(0, 1);
-            const date = line.substring(1, 26);
-            const product = line.substring(26, 56);
-            const value = line.substring(56, 66).trim().replace(/^0+/, "");
-            const salesperson = line.substring(66, 86);
-            console.log(type, date, product, value, salesperson);
-            return { type, date, product, value, salesperson };
-          });
-          if (lines.length > 0 && lines[lines.length - 1].salesperson === "") {
+          const lines = reader.result.split("\n");
+          if (lines[lines.length - 1] === "") {
             lines.pop();
           }
+
+          const salesRecords: SalesRecord[] = [];
+          for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const type = line.substring(0, 1);
+            const date = line.substring(1, 26);
+            const product = line.substring(26, 56).trim();
+            const value = line.substring(56, 66).trim().replace(/^0+/, "");
+            const salesperson = line.substring(66, 86);
+
+            const salesRecord: SalesRecord = {
+              type,
+              date,
+              product,
+              value,
+              salesperson,
+            };
+            salesRecords.push(salesRecord);
+          }
+
           setText(lines.map((line) => JSON.stringify(line)));
           setSubmitted(false);
+          setSalesRecords(salesRecords);
 
-          const sales = lines.map((line) => ({
-            type: line.type,
-            date: line.date,
-            product: line.product,
-            value: line.value,
-            salesperson: line.salesperson,
-          }));
-
-          console.log(JSON.stringify(sales));
+          console.log(JSON.stringify(salesRecords));
         }
       };
       reader.readAsText(file);
@@ -45,32 +62,32 @@ const Home = () => {
   const handleConfirm = async () => {
     try {
       setLoading(true);
-      const sales = text.map((line) => JSON.parse(line));
-      const res = await fetch(
-        "https://644ad55ba8370fb32158e570.mockapi.io/sales/sales_info",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ sales }),
-        }
-      );
-      console.log(await res.json());
-      setText([]);
+      const salesRecordsJSON = JSON.stringify(salesRecords);
+      await fetch("http://localhost:3005/sales/create-sales", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: salesRecordsJSON,
+      });
       setSubmitted(true);
-      setLoading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+      setSalesRecords([]);
+      router.push("/results");
     } catch (error) {
       console.error(error);
+    } finally {
       setLoading(false);
     }
   };
 
+  const handleReset = () => {
+    fileInputRef.current && (fileInputRef.current.value = "");
+    setSubmitted(false);
+    setSalesRecords([]);
+  };
+
   return (
-    <div className="p-4">
+    <div className="p-4 w-full bg-gray-500 h-full rounded-lg">
       <label
         className="block mb-2 mx-auto sm:mx-4 text-sm font-medium text-gray-900 text-center sm:text-left"
         htmlFor="file_input"
@@ -78,57 +95,90 @@ const Home = () => {
         Upload file
       </label>
       {submitted ? (
-        <p className="mb-2 mx-auto sm:mx-4 text-sm font-medium text-green-500 text-center sm:text-left">
-          File uploaded successfully!
-        </p>
-      ) : (
-        <input
-          className="block w-full sm:max-w-md mx-auto sm:mx-4 text-sm text-gray-900 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700"
-          type="file"
-          id="file_input"
-          onChange={handleUpload}
-          ref={fileInputRef}
-        />
-      )}
-      <button
-        className="bg-blue-500 mx-auto sm:mx-4 mt-3 mb-5 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400"
-        disabled={loading}
-        onClick={handleConfirm}
-      >
-        {loading ? "Uploading data..." : "Confirm upload"}
-      </button>
-      {text && text.length > 0 ? (
-        <div className="overflow-x-auto mx-auto sm:mx-4">
-          <table className="table-auto w-full bg-white p-3 rounded-md shadow-lg">
-            <thead>
-              <tr>
-                <th className="p-2">Type</th>
-                <th>Date</th>
-                <th>Product</th>
-                <th>Value</th>
-                <th>Salesperson</th>
-              </tr>
-            </thead>
-            <tbody>
-              {text.map((line, index) => {
-                const { type, date, product, value, salesperson } =
-                  JSON.parse(line);
-                return (
-                  <tr key={index}>
-                    <td className="border px-4 py-2">{type}</td>
-                    <td className="border px-4 py-2">{date}</td>
-                    <td className="border px-4 py-2">{product}</td>
-                    <td className="border px-4 py-2">{value}</td>
-                    <td className="border px-4 py-2">{salesperson}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="mb-2 mx-auto sm:mx-4 text-sm font-medium text-green-500">
+          File submitted.
         </div>
-      ) : null}
+      ) : (
+        <div>
+          <input
+            className="sm:hidden"
+            ref={fileInputRef}
+            type="file"
+            accept=".txt"
+            onChange={handleUpload}
+          />
+          <button
+            className="hidden sm:block py-1 px-4 rounded-md border border-gray-300 text-sm font-medium text-gray-700 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500"
+            onClick={() => {
+              if (fileInputRef.current) {
+                fileInputRef.current.click();
+              }
+            }}
+          >
+            Choose file
+          </button>
+          {salesRecords.length > 0 && (
+            <table className="w-full mt-4 border-collapse border border-gray-500">
+              <thead>
+                <tr className="bg-gray-800 text-white">
+                  <th className="p-2">Type</th>
+                  <th className="p-2">Date</th>
+                  <th className="p-2">Product</th>
+                  <th className="p-2">Value</th>
+                  <th className="p-2">Salesperson</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesRecords.map((record, index) => (
+                  <tr
+                    key={index}
+                    className={index % 2 === 0 ? "bg-gray-100" : "bg-white"}
+                  >
+                    <td className="p-2 border border-gray-500">
+                      {record.type}
+                    </td>
+                    <td className="p-2 border border-gray-500">
+                      {record.date}
+                    </td>
+                    <td className="p-2 border border-gray-500">
+                      {record.product}
+                    </td>
+                    <td className="p-2 border border-gray-500">
+                      {record.value}
+                    </td>
+                    <td className="p-2 border border-gray-500">
+                      {record.salesperson}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+      {loading ? (
+        <div className="mt-4 animate-pulse">Submitting file...</div>
+      ) : (
+        !submitted &&
+        salesRecords.length > 0 && (
+          <div className="mt-4 text-center">
+            <button
+              className="inline-block bg-gray-700 hover:bg-gray-800 py-2 px-4 text-white text-sm font-medium rounded-md"
+              onClick={handleConfirm}
+            >
+              Submit
+            </button>{" "}
+            <button
+              className="inline-block bg-gray-700 hover:bg-gray-800 py-2 px-4 text-white text-sm font-medium rounded-md"
+              onClick={handleReset}
+            >
+              Go back
+            </button>
+          </div>
+        )
+      )}
     </div>
   );
-};
+}
 
-export default Home;
+export default Upload;
