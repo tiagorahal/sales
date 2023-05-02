@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-
 interface Sale {
   id: number;
   type: string;
@@ -22,7 +21,7 @@ const AllSales = (): JSX.Element => {
   }, []);
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto w-6/12 bg-white rounded-lg p-4">
       <h1 className="text-2xl font-bold mb-4">All Sales</h1>
       <div className="bg-white shadow-md rounded my-6">
         <table className="w-full table-auto border-collapse">

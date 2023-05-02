@@ -1,14 +1,17 @@
 import { useState, useRef } from "react";
+import { useRouter } from "next/router";
+
 
 type SalesRecord = {
   type: string;
   date: string;
   product: string;
-  value: number;
+  value: string;
   salesperson: string;
 };
 
 export default function Upload() {
+  const router = useRouter();
   const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
   const [text, setText] = useState<string[]>([]);
   const [submitted, setSubmitted] = useState(false);
@@ -30,11 +33,9 @@ export default function Upload() {
           for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const type = line.substring(0, 1);
-            const date = new Date(line.substring(1, 26)).toISOString();
+            const date = line.substring(1, 26);
             const product = line.substring(26, 56).trim();
-            const value = parseInt(
-              line.substring(56, 66).trim().replace(/^0+/, "")
-            );
+            const value = line.substring(56, 66).trim().replace(/^0+/, "");
             const salesperson = line.substring(66, 86);
 
             const salesRecord: SalesRecord = {
@@ -71,6 +72,7 @@ export default function Upload() {
       });
       setSubmitted(true);
       setSalesRecords([]);
+      router.push("/results");
     } catch (error) {
       console.error(error);
     } finally {
