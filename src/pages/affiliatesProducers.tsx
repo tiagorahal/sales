@@ -3,7 +3,7 @@ import axios from "axios";
 
 type Affiliate = string;
 
-export default function AffiliateTable() {
+const AffiliateTable = (): JSX.Element => {
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [affiliatesPerPage, setAffiliatesPerPage] = useState(10);
@@ -141,3 +141,5 @@ export default function AffiliateTable() {
     </div>
   );
 }
+
+export default AffiliateTable;

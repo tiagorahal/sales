@@ -10,7 +10,7 @@ type SalesRecord = {
   salesperson: string;
 };
 
-export default function Upload() {
+const Upload = (): JSX.Element => {
   const router = useRouter();
   const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
   const [text, setText] = useState<string[]>([]);
@@ -180,3 +180,5 @@ export default function Upload() {
     </div>
   );
 }
+
+export default Upload;
